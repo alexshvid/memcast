@@ -15,6 +15,7 @@ for f in lib/*.jar; do
   CLASSPATH=${CLASSPATH}:$f;
 done
 
-java -server -classpath ${CLASSPATH} $JAVA_OPTS com.shvid.memcast.MemcastMain $1
+java -server -classpath ${CLASSPATH} $JAVA_OPTS com.shvid.memcast.unsafe.OffHeapFileSharing $1
 
 popd
+

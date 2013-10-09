@@ -170,6 +170,12 @@
 			<version>3.12.1.GA</version>
 		</dependency>
 	
+<dependency>
+  <groupId>org.apache.avro</groupId>
+  <artifactId>avro</artifactId>
+  <version>1.7.5</version>
+</dependency>	
+	
 	</dependencies>
 	<properties>
 		<BUILD_TAG>-SNAPSHOT</BUILD_TAG>

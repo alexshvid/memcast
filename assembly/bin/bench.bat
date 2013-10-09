@@ -12,6 +12,7 @@ set JAVA_OPTS=%JAVA_OPTS% -Xss412k
 
 @for %%a in (lib\*.jar) do @call bin\add2cp.bat %%a
 
-@java -classpath %CLASSPATH% %JAVA_OPTS% com.shvid.memcast.MemcastMain %1
+@java -classpath %CLASSPATH% %JAVA_OPTS% com.shvid.memcast.unsafe.OffHeapFileSharing %1
 
 @popd
+
