@@ -1,0 +1,5 @@
+<ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="http://ehcache.org/ehcache.xsd"
+         name="HelloWorldConfig">
+  <cache name="hello-world" maxBytesLocalHeap="64M"/>
+</ehcache>

@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.shvid.memcast</groupId>
 	<artifactId>memcast</artifactId>
-	<version>0.1${BUILD_TAG}</version>
+	<version>0.1</version>
 	<packaging>jar</packaging>
 	<name>memcast</name>
 	<description>memcast</description>
@@ -176,8 +176,38 @@
   <version>1.7.5</version>
 </dependency>	
 	
-	</dependencies>
-	<properties>
-		<BUILD_TAG>-SNAPSHOT</BUILD_TAG>
-	</properties>
+<dependency>
+<groupId>com.coherence</groupId>
+<artifactId>coherence</artifactId>
+<version>3.7</version>
+</dependency>
+	
+<dependency>
+<groupId>com.terracotta</groupId>
+<artifactId>bigmemory</artifactId>
+<version>4.0.4</version>
+</dependency>	
+	
+<dependency>
+    <groupId>net.sf.ehcache</groupId>
+    <artifactId>ehcache-ee</artifactId>
+    <version>2.7.4</version>
+</dependency>	
+	
+	
+<dependency>
+	<groupId>org.slf4j</groupId>
+	<artifactId>slf4j-api</artifactId>
+	<version>1.6.6</version>
+</dependency>
+            
+<dependency>
+	<groupId>org.slf4j</groupId>
+	<artifactId>slf4j-jdk14</artifactId>
+	<version>1.6.6</version>
+</dependency>            
+            	
+	
+</dependencies>
+
 </project>
