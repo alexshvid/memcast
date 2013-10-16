@@ -9,6 +9,8 @@ JAVA_OPTS="$JAVA_OPTS -Xdebug -Xrunjdwp:transport=dt_socket,address=9000,suspend
 JAVA_OPTS="$JAVA_OPTS -Dcom.sun.management.jmxremote.port=8000 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
 JAVA_OPTS="$JAVA_OPTS -Xss412k"
 
+JAVA_OPTS="$JAVA_OPTS -XX:MaxDirectMemorySize=9G"
+
 CLASSPATH='conf'
 
 for f in lib/*.jar; do

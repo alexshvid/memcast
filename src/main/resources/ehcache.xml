@@ -1,5 +1,31 @@
 <ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="http://ehcache.org/ehcache.xsd"
-         name="HelloWorldConfig">
-  <cache name="hello-world" maxBytesLocalHeap="64M"/>
+     xsi:noNamespaceSchemaLocation="http://ehcache.org/ehcache.xsd"
+     name="myBigMemoryMaxConfig">
+
+  <!-- Tell BigMemory where to write its data to disk. -->
+  <diskStore path="."/>
+
+  <!-- Set 'maxBytesLocalOffHeap' to the amount of off-heap in-memory 
+  storage you want to use. This memory is invisible to the Java garbage 
+  collector, providing for gigabytes to terabytes of in-memory data without 
+  garbage collection pauses. --> 
+  <cache name="hello-world"
+        maxBytesLocalHeap="512M"
+        maxBytesLocalOffHeap="8G">
+
+    <!-- Tell BigMemory to use the "localRestartable" persistence
+    strategy for fast restart (optional). -->
+    <!--  
+    <persistence strategy="localRestartable"/>
+    -->
+
+    <!-- Include the terracotta element so that the data set will be 
+    managed as a client of the Terracotta server array.  -->
+    <terracotta/>
+  </cache>
+
+  <!-- Specify where to find the server array configuration. In this 
+  case, the configuration is retrieved from the local server. --> 
+  <terracottaConfig url="localhost:9510" />
+
 </ehcache>
