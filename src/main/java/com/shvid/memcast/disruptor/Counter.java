@@ -11,7 +11,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class Counter {
 
-	private static final int ITER = 500000000;
+	private static final long ITER = 500000000;
 
 	static CyclicBarrier barrier = new CyclicBarrier(1);
 
