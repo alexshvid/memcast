@@ -1,5 +1,7 @@
 package com.shvid.memcast.disruptor;
 
+import java.nio.ByteBuffer;
+import java.nio.LongBuffer;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CyclicBarrier;
@@ -8,6 +10,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
+
+import com.twitter.jsr166e.LongAdder;
 
 public class Counter {
 
@@ -30,6 +34,145 @@ public class Counter {
 
 	};
 
+	
+	static class UnsafeLong {
+		
+		private static long valueOffset;
+		
+		volatile long value;
+		
+		void increment() {
+			long current = UnsafeUtil.UNSAFE.getLong(this, valueOffset);
+			UnsafeUtil.UNSAFE.putLong(this, valueOffset, current + 1);
+		}
+		
+		static {
+			try {
+		        valueOffset = UnsafeUtil.UNSAFE.objectFieldOffset(UnsafeLong.class.getDeclaredField("value"));
+			}
+			catch(Exception e) {
+				throw new Error(e);
+			}
+		}
+	}
+	
+	static final UnsafeLong unsafeLong = new UnsafeLong();
+	
+	static final Callable<Long> SIMPLE_HEAP_UNSAFE = new Callable<Long>() {
+
+		public Long call() {
+			await();
+			long n0 = System.currentTimeMillis();
+			for (long i = 0; i != ITER; ++i) {
+				unsafeLong.increment();
+			}
+			return System.currentTimeMillis() - n0;
+		}
+
+	};	
+	
+	static final long offHeapAddress;
+	
+	static {
+		try {
+			offHeapAddress = UnsafeUtil.UNSAFE.allocateMemory(8);
+		}
+		catch(Exception e) {
+			throw new Error(e);
+		}
+	}
+	
+	static final Callable<Long> SIMPLE_OFFHEAP_UNSAFE = new Callable<Long>() {
+
+		public Long call() {
+			await();
+			long n0 = System.currentTimeMillis();
+			for (long i = 0; i != ITER; ++i) {
+				long current = UnsafeUtil.UNSAFE.getLong(offHeapAddress);
+				UnsafeUtil.UNSAFE.putLong(offHeapAddress, current + 1);
+			}
+			return System.currentTimeMillis() - n0;
+		}
+
+	};	
+	
+	
+	static final LongBuffer heapBuffer = ByteBuffer.allocate(8).asLongBuffer();
+	
+	static final Callable<Long> SIMPLE_HEAP_DIRECT = new Callable<Long>() {
+
+		public Long call() {
+			await();
+			long n0 = System.currentTimeMillis();
+			for (long i = 0; i != ITER; ++i) {
+				long current = heapBuffer.get(0);
+				heapBuffer.put(0, current + 1);
+			}
+			return System.currentTimeMillis() - n0;
+		}
+
+	};		
+	
+	static final LongBuffer directBuffer = ByteBuffer.allocateDirect(8).asLongBuffer();
+	
+	
+	static final Callable<Long> SIMPLE_OFFHEAP_DIRECT = new Callable<Long>() {
+
+		public Long call() {
+			await();
+			long n0 = System.currentTimeMillis();
+			for (long i = 0; i != ITER; ++i) {
+				long current = directBuffer.get(0);
+				directBuffer.put(0, current + 1);
+			}
+			return System.currentTimeMillis() - n0;
+		}
+
+	};	
+	
+	
+	static class UnsafeCASLong {
+		
+		private static long valueOffset;
+		
+		long value;
+		
+		void increment() {
+			while (true) {
+				long current = UnsafeUtil.UNSAFE.getLong(this, valueOffset);
+				long next = current + 1;
+				if (UnsafeUtil.UNSAFE.compareAndSwapLong(this, valueOffset, current, next)) {
+					return;
+				}
+			}
+		}
+		
+		static {
+			try {
+		        valueOffset = UnsafeUtil.UNSAFE.objectFieldOffset(UnsafeCASLong.class.getDeclaredField("value"));
+			}
+			catch(Exception e) {
+				throw new Error(e);
+			}
+		}
+	}
+	
+	static final UnsafeCASLong unsafeCASLong = new UnsafeCASLong();
+	
+	static final Callable<Long> UNSAFE_CAS = new Callable<Long>() {
+
+		public Long call() {
+			await();
+			long n0 = System.currentTimeMillis();
+			for (long i = 0; i != ITER; ++i) {
+				unsafeCASLong.increment();
+			}
+			return System.currentTimeMillis() - n0;
+		}
+
+	};	
+	
+	
 	static volatile long vcounter = 0;
 
 	static final Callable<Long> VOLATILE = new Callable<Long>() {
@@ -99,7 +242,23 @@ public class Counter {
 		}
 
 	};	
+	
+	
+	static final LongAdder adder = new LongAdder();
 
+	static final Callable<Long> LONG_ADDER = new Callable<Long>() {
+
+		public Long call() {
+			await();
+			long n0 = System.currentTimeMillis();
+			for (long i = 0; i != ITER; ++i) {
+				adder.increment();
+			}
+			return System.currentTimeMillis() - n0;
+		}
+
+	};	
+	
 	public static void main(String[] args) {
 
 		try {
@@ -111,16 +270,50 @@ public class Counter {
 			long n1 = SIMPLE.call();
 			System.out.println("Simple loop " + n1);
 
+			long shn1 = SIMPLE_HEAP_UNSAFE.call();
+
+			System.out.println("Simple.HEAP.Unsafe loop " + shn1 + " slower in "
+					+ (shn1 / n1) + "x");
+			
+			long ohn1 = SIMPLE_OFFHEAP_UNSAFE.call();
+
+			System.out.println("Simple.OFFHEAP.Unsafe loop " + ohn1 + " slower in "
+					+ (ohn1 / n1) + "x");
+			
+			
+			long shdn1 = SIMPLE_HEAP_DIRECT.call();
+
+			System.out.println("Simple.HEAP.Direct loop " + shdn1 + " slower in "
+					+ (shdn1 / n1) + "x");
+			
+			
+			long sohdn1 = SIMPLE_OFFHEAP_DIRECT.call();
+
+			System.out.println("Simple.OFFHEAP.Direct loop " + sohdn1 + " slower in "
+					+ (sohdn1 / n1) + "x");			
+
+			
 			long vn1 = VOLATILE.call();
 
 			System.out.println("Volatile loop " + vn1 + " slower in "
 					+ (vn1 / n1) + "x");
 
+			
+			long un1 = UNSAFE_CAS.call();
+
+			System.out.println("HEAP.Unsafe.CAS loop " + un1 + " slower in "
+					+ (un1 / n1) + "x");
+			
 			long an1 = ATOMIC_LONG.call();
 
 			System.out.println("AtomicLong loop " + an1 + " slower in "
 					+ (an1 / n1) + "x");
 
+			long lan1 = LONG_ADDER.call();
+
+			System.out.println("LongAdder loop " + lan1 + " slower in "
+					+ (lan1 / n1) + "x");
+			
 			long rn1 = REENTRANT_LOCK.call();
 
 			System.out.println("ReentrantLock loop " + rn1 + " slower in "
@@ -142,14 +335,53 @@ public class Counter {
 			Future<Long> f2 = service.submit(SIMPLE);
 			f1.get();
 			n1 = f2.get();
-			System.out.println("Simple loop = " + n1);
+			System.out.println("Simple loop = " + n1 + " - no consistency");
 
+			f1 = service.submit(SIMPLE_HEAP_UNSAFE);
+			f2 = service.submit(SIMPLE_HEAP_UNSAFE);
+			f1.get();
+			shn1 = f2.get();
+			System.out.println("Simple.HEAP.Unsafe loop " + shn1 + " slower in "
+					+ (shn1 / n1) + "x - no consistency");
+			
+			f1 = service.submit(SIMPLE_OFFHEAP_UNSAFE);
+			f2 = service.submit(SIMPLE_OFFHEAP_UNSAFE);
+			f1.get();
+			ohn1 = f2.get();
+			System.out.println("Simple.OFFHEAP.Unsafe loop " + ohn1 + " slower in "
+					+ (ohn1 / n1) + "x - no consistency");
+
+			
+			f1 = service.submit(SIMPLE_HEAP_DIRECT);
+			f2 = service.submit(SIMPLE_HEAP_DIRECT);
+			f1.get();
+			shdn1 = f2.get();
+			System.out.println("Simple.HEAP.Direct loop " + shdn1 + " slower in "
+					+ (shdn1 / n1) + "x - no consistency");
+			
+			
+			f1 = service.submit(SIMPLE_OFFHEAP_DIRECT);
+			f2 = service.submit(SIMPLE_OFFHEAP_DIRECT);
+			f1.get();
+			sohdn1 = f2.get();
+			System.out.println("Simple.OFFHEAP.Direct loop " + sohdn1 + " slower in "
+					+ (sohdn1 / n1) + "x - no consistency");
+			
+			
 			f1 = service.submit(VOLATILE);
 			f2 = service.submit(VOLATILE);
 			f1.get();
 			vn1 = f2.get();
 			System.out.println("Volatile loop " + vn1 + " slower in "
 					+ (vn1 / n1) + "x");
+			
+			
+			f1 = service.submit(UNSAFE_CAS);
+			f2 = service.submit(UNSAFE_CAS);
+			f1.get();
+			un1 = f2.get();
+			System.out.println("HEAP.Unsafe.CAS loop " + un1 + " slower in "
+					+ (un1 / n1) + "x");
 			
 			
 			f1 = service.submit(ATOMIC_LONG);
@@ -160,6 +392,13 @@ public class Counter {
 			System.out.println("AtomicLong loop " + an1 + " slower in "
 					+ (an1 / n1) + "x");
 
+			f1 = service.submit(LONG_ADDER);
+			f2 = service.submit(LONG_ADDER);
+			f1.get();
+			lan1 = f2.get();
+
+			System.out.println("LongAdder loop " + lan1 + " slower in "
+					+ (lan1 / n1) + "x");
 			
 			f1 = service.submit(REENTRANT_LOCK);
 			f2 = service.submit(REENTRANT_LOCK);
