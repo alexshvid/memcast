@@ -21,11 +21,14 @@
 
     <!-- Include the terracotta element so that the data set will be 
     managed as a client of the Terracotta server array.  -->
+    <!--  
     <terracotta/>
+    -->
   </cache>
 
   <!-- Specify where to find the server array configuration. In this 
   case, the configuration is retrieved from the local server. --> 
+  <!--
   <terracottaConfig url="localhost:9510" />
-
+  -->
 </ehcache>

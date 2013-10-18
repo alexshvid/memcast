@@ -2,7 +2,7 @@ package com.shvid.memcast.unsafe;
 
 public final class FalseSharing implements Runnable {
 	
-	public final static int NUM_THREADS = 20; // change
+	public final static int NUM_THREADS = 8; // change
 	public final static long ITERATIONS = 500L * 1000L * 1000L;
 	private final int arrayIndex;
 
@@ -48,7 +48,7 @@ public final class FalseSharing implements Runnable {
 
 	public final static class VolatileLong {
 		public volatile long value = 0L;
-		//public long p1, p2, p3, p4, p5, p6; // comment out
-		//public long s1, s2, s3, s4, s5, s6, s7, s8; // comment out
+		public volatile long p1, p2, p3, p4, p5, p6; // comment out
+		public volatile long s1, s2, s3, s4, s5, s6, s7, s8; // comment out
 	}
 }

@@ -22,7 +22,7 @@ public class OffHeapFileSharing implements Runnable {
         }
     }
     
-	public final static int NUM_THREADS = 4; // change
+	public final static int NUM_THREADS = 8; // change
 	public final static long ITERATIONS = 500L * 1000L * 1000L;
 	private final int arrayIndex;
 
@@ -31,7 +31,7 @@ public class OffHeapFileSharing implements Runnable {
 	static {
 		
 		final long requiredHeap = VolatileLongOffHeap.size * NUM_THREADS;
-		address = unsafe.allocateMemory(requiredHeap);
+		address = unsafe.allocateMemory(requiredHeap + 100);
 		
 		System.out.println("address = " + Long.toHexString(address));
 	}
@@ -88,7 +88,7 @@ public class OffHeapFileSharing implements Runnable {
 	public final static class VolatileLongOffHeap {
 		
 		public static final long valueOffset = 0L;
-		public static final long size = 128L;
+		public static final long size = 4L;
 		//public static final long size = 65536 * 8L;
 
 		public final static void setValue(OffHeapFileSharing thread, long objectOffset, long value) {
