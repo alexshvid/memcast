@@ -67,11 +67,7 @@
       <attribute value="jar:file:/Users/ashvid/.m2/repository/javassist/javassist/3.12.1.GA/javassist-3.12.1.GA-javadoc.jar!/" name="javadoc_location"/>
     </attributes>
   </classpathentry>
-  <classpathentry kind="var" path="M2_REPO/com/twitter/jsr166e/1.0.0/jsr166e-1.0.0.jar" sourcepath="M2_REPO/com/twitter/jsr166e/1.0.0/jsr166e-1.0.0-sources.jar">
-    <attributes>
-      <attribute value="jar:file:/Users/ashvid/.m2/repository/com/twitter/jsr166e/1.0.0/jsr166e-1.0.0-javadoc.jar!/" name="javadoc_location"/>
-    </attributes>
-  </classpathentry>
+  <classpathentry kind="var" path="M2_REPO/jsr166/jsr166e/1.0/jsr166e-1.0.jar"/>
   <classpathentry kind="var" path="M2_REPO/junit/junit/4.5/junit-4.5.jar" sourcepath="M2_REPO/junit/junit/4.5/junit-4.5-sources.jar"/>
   <classpathentry kind="var" path="M2_REPO/log4j/log4j/1.2.14/log4j-1.2.14.jar" sourcepath="M2_REPO/log4j/log4j/1.2.14/log4j-1.2.14-sources.jar"/>
   <classpathentry kind="var" path="M2_REPO/com/thoughtworks/paranamer/paranamer/2.3/paranamer-2.3.jar" sourcepath="M2_REPO/com/thoughtworks/paranamer/paranamer/2.3/paranamer-2.3-sources.jar">

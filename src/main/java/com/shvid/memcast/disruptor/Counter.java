@@ -12,7 +12,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.twitter.jsr166e.LongAdder;
+import jsr166e.LongAdder;
+import jsr166e.StampedLock;
 
 /**
  * Shared Memory disk creation on MacOs
@@ -153,6 +154,16 @@ public class Counter {
 			throw new Error(e);
 		}
 	}
+	
+	static private void closeFiles() {
+		if (mappedSHMFile != null) {
+			mappedSHMFile.close();
+		}
+		if (mappedSSDFile != null) {
+			mappedSSDFile.close();
+		}
+	}
+	
 	
 	static final Callable<Long> SIMPLE_OFFHEAP_UNSAFE = new Callable<Long>() {
 
@@ -331,6 +342,28 @@ public class Counter {
 
 	};	
 	
+	
+	static final StampedLock stampedLock = new StampedLock();
+	
+	static final Callable<Long> STAMPED_LOCK = new Callable<Long>() {
+
+		public Long call() {
+			await();
+			long n0 = System.currentTimeMillis();
+			for (long i = 0; i != ITER; ++i) {
+			     long stamp = stampedLock.writeLock();
+			     try {
+			    	 counter++;
+			     } finally {
+			    	 stampedLock.unlockWrite(stamp);
+			     }
+			}
+			return System.currentTimeMillis() - n0;
+		}
+
+	};		
+	
+	
 	public static void main(String[] args) {
 
 		try {
@@ -406,7 +439,11 @@ public class Counter {
 			System.out.println("Synchronized loop " + sn1 + " slower in "
 					+ (sn1 / n1) + "x - concurrent");
 
-						
+			long sln1 = STAMPED_LOCK.call();
+
+			System.out.println("StampedLock loop " + sln1 + " slower in "
+					+ (sln1 / n1) + "x - concurrent");			
+			
 			System.out.println("Two Threads long counter from 0 to " + ITER
 					+ " example");
 			barrier = new CyclicBarrier(2);
@@ -515,9 +552,18 @@ public class Counter {
 			System.out.println("Synchronized loop " + sn1 + " slower in "
 					+ (sn1 / n1) + "x - concurrent");
 			
+			
+			f1 = service.submit(STAMPED_LOCK);
+			f2 = service.submit(STAMPED_LOCK);
+			f1.get();
+			sln1 = f2.get();
+
+			System.out.println("StampedLock loop " + sln1 + " slower in "
+					+ (sln1 / n1) + "x - concurrent");
+			
 			service.shutdown();
 			
-			mappedSHMFile.close();
+			closeFiles();
 
 		} catch (Exception e) {
 			e.printStackTrace();
